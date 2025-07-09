@@ -8,7 +8,7 @@ This project demonstrates how to detect **Nmap scan activity** using **Zeek** (f
 
 ## 📦 Tools & Technologies
 
-- 🐳 Docker & Docker Compose  
+- 🐳 Docker 
 - 🧠 [Zeek (Bro IDS)](https://zeek.org)  
 - 🦈 [Wireshark](https://www.wireshark.org)  
 - ⚔️ [Nmap](https://nmap.org)  
@@ -24,15 +24,14 @@ This project demonstrates how to detect **Nmap scan activity** using **Zeek** (f
 
 ## 🛠️ Lab Architecture
 
-+-----------------------------+
-
-Host: MacBook (me)
-- Nmap Attacker
-- Docker Containers:
-• Zeek IDS
-• Target Web Service
-- Wireshark (for pcap)
-+-----------------------------+
++------------------------------------------------+
+|                   Host: MacBook                |
+|------------------------------------------------|
+|  Attacker:     Nmap CLI (on localhost)         |
+|  Victim:       nginx container (Docker)        |
+|  Sniffer:      Zeek running on host interface  |
+|  Packet view:  Wireshark analyzing .pcap       |
++------------------------------------------------+
 
 yaml
 Copy
@@ -42,70 +41,60 @@ Edit
 
 ## ⚙️ Setup Instructions
 
-### 1. Clone the Project
+### 1. Run the Victim Web Server (NGINX)
 
 ```bash
-git clone https://github.com/your-username/zeek-nmap-detection-lab.git
-cd zeek-nmap-detection-lab
+docker run -d --name victim-nginx -p 8080:80 nginx
 ```
-### 2. Start the Environment
+This container acts as the scan target for Nmap.
+<img src="assets/Screenshot 2025-04-30 at 09.01.28.png" alt="Analytics Rules" width="800"/>
+### 2. Start Zeek on Your Network Interface
 
 ```bash
-docker-compose up -d
+ifconfig
 ```
-This spins up:
-- A zeek container (in sniffing mode)
 
-- A simple nginx container as the scan target
+Then start Zeek:
+```bash
+sudo zeek -i en0 local
+```
+Zeek will begin monitoring live traffic and output logs to the current directory (conn.log, notice.log, etc.).
 
-
-### 3. Start Packet Capture (Optional)
+### 3. Run the Nmap Scan (From Host)
 ```bash
 
-docker exec -it zeek tcpdump -i eth0 -w scan.pcap
-```
-### 4. Run the Nmap Scan from Host
-```bash
-nmap -sS <target-ip> -p 80,443
-Use docker inspect <container_name> to get the container IP of the target.
-```
+sudo nmap -sS -p 8080 127.0.0.1
 
-### 5. Stop the Capture
-```bash
-
-docker exec -it zeek pkill tcpdump
 ```
-## 📂 Analyze with Zeek
-Zeek logs are saved inside the container. To view them:
+### 4. Analyze Zeek Logs
 
 ```bash
+cat conn.log | grep 8080
+cat notice.log
 
-docker exec -it zeek cat /opt/zeek/logs/current/conn.log
-docker exec -it zeek cat /opt/zeek/logs/current/notice.log
 ```
 
-### 🧠 Logs to Check:
-- conn.log: Connection attempts and TCP handshakes
+### 5. Capture Packets with Wireshark 
+Open Wireshark and look for these interfaces:
 
-- notice.log: Detected anomalies like port scans or suspicious patterns
+- en0
 
-### 🦈 Analyze with Wireshark
-- Copy .pcap file from container to host:
+Start capturing before scanning.
 
-```bash
-docker cp zeek:/scan.pcap .
-```
-- Open in Wireshark:
-
+Optional Wireshark filter:
 ```bash
 
-open scan.pcap
-```
-- Filter SYN scans:
+ip.addr == 172.17.0.2
 
-```bash
-tcp.flags.syn==1 && tcp.flags.ack==0
 ```
+## 📂 Run Nmap Scan (From Host)
+In a new terminal window:
+```bash
+nmap -sS 172.17.0.2
+
+```
+
+
 📸 Screenshots
 <details> <summary>🔍 Click to expand</summary>
 ✅ Wireshark showing SYN scan traffic
