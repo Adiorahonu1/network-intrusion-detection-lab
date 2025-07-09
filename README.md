@@ -47,7 +47,7 @@ Edit
 docker run -d --name victim-nginx -p 8080:80 nginx
 ```
 This container acts as the scan target for Nmap.
-<img src="assets/Screenshot 2025-04-30 at 09.01.28.png" alt="Analytics Rules" width="800"/>
+<img src="asset/Screenshot 2025-07-09 at 17.13.04.png" alt="Analytics Rules" width="800"/>
 ### 2. Start Zeek on Your Network Interface
 
 ```bash
@@ -58,14 +58,17 @@ Then start Zeek:
 ```bash
 sudo zeek -i en0 local
 ```
+<img src="asset/Screenshot 2025-07-09 at 16.29.13.png" alt="Analytics Rules" width="800"/>
+
 Zeek will begin monitoring live traffic and output logs to the current directory (conn.log, notice.log, etc.).
 
 ### 3. Run the Nmap Scan (From Host)
 ```bash
 
-sudo nmap -sS -p 8080 127.0.0.1
+ sudo nmap -sS 172.28.1.10
 
 ```
+<img src="asset/Screenshot 2025-07-09 at 16.32.15.png" alt="Analytics Rules" width="800"/>
 ### 4. Analyze Zeek Logs
 
 ```bash
@@ -73,6 +76,9 @@ cat conn.log | grep 8080
 cat notice.log
 
 ```
+<img src="asset/Screenshot 2025-07-09 at 16.32.30.png" alt="Analytics Rules" width="800"/>
+
+<img src="asset/Screenshot 2025-07-09 at 17.11.11.png" alt="Analytics Rules" width="800"/>
 
 ### 5. Capture Packets with Wireshark 
 Open Wireshark and look for these interfaces:
@@ -87,13 +93,15 @@ Optional Wireshark filter:
 ip.addr == 172.17.0.2
 
 ```
+<img src="asset/Screenshot 2025-07-09 at 16.33.01.png" alt="Analytics Rules" width="800"/>
+
 ## 📂 Run Nmap Scan (From Host)
 In a new terminal window:
 ```bash
 nmap -sS 172.17.0.2
 
 ```
-
+<img src="asset/Screenshot 2025-07-09 at 16.33.01.png" alt="Analytics Rules" width="800"/>
 
 📸 Screenshots
 <details> <summary>🔍 Click to expand</summary>
